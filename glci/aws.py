@@ -7,15 +7,45 @@ import time
 import traceback
 import typing
 import functools
+import os
 
 import botocore.client
 
 import glci.model
 import glci.util
-import ccc.aws
 
 
 logger = logging.getLogger(__name__)
+
+class AWSSession:
+    class CCconfigPrecedence(enum.Enum):
+        ALWAYS = 'always'
+        PROBE = 'probe'
+        NEVER = 'never'
+
+        def equals(self, string):
+            return self.value == string
+
+    force_cc_config: CCconfigPrecedence = CCconfigPrecedence.PROBE
+
+    def is_secret_server_available() -> bool:
+        if os.getenv("SECRETS_SERVER_ENDPOINT") and os.getenv("SECRETS_SERVER_CONCOURSE_CFG_NAME"):
+            return True
+        return False
+
+    @classmethod
+    def enforce_cc_config(cls, when: str):
+        cls.force_cc_config = when
+
+    @classmethod
+    def get_session(cls, aws_cfg: str = None, region_name: str = None):
+        if (cls.CCconfigPrecedence.ALWAYS.equals(cls.force_cc_config) or 
+            (cls.CCconfigPrecedence.PROBE.equals(cls.force_cc_config) and cls.is_secret_server_available())):
+            import ccc.aws
+            return ccc.aws.session(aws_cfg=aws_cfg, region_name=region_name)
+        else:
+            import boto3
+            return boto3.Session(region_name=region_name)
 
 
 def response_ok(response: dict):
@@ -366,8 +396,8 @@ def upload_and_register_gardenlinux_image(
         logger.info(
             f'Running AWS-Publication for aws-config {aws_cfg_name}.'
         )
-        session = ccc.aws.session(aws_cfg=aws_cfg_name)
-        mk_session = functools.partial(ccc.aws.session, aws_cfg=aws_cfg_name)
+        session = AWSSession.get_session(aws_cfg=aws_cfg_name)
+        mk_session = functools.partial(AWSSession.get_session, aws_cfg=aws_cfg_name)
         ec2_client = session.client('ec2')
         s3_client = session.client('s3')
 
