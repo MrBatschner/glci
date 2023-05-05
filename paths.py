@@ -18,5 +18,5 @@ publishing_cfg_path = os.path.join(repo_root, 'publishing-cfg.yaml')
 publishing_versions_path = os.path.join(repo_root, 'publishing-versions.yaml')
 package_alias_path = os.path.join(repo_root, 'package_aliases.yaml')
 
-flavour_cfg_path = os.path.join(gardenlinux_dir, 'flavours.yaml')
+flavour_cfg_path = os.path.join(repo_root, 'flavours.yaml')
 version_path = os.path.join(repo_root, 'VERSION')

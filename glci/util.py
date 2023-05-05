@@ -18,6 +18,8 @@ import yaml
 import glci.model
 import paths
 
+import dacite.exceptions
+
 GardenlinuxFlavourSet = glci.model.GardenlinuxFlavourSet
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 GardenlinuxFlavourCombination = glci.model.GardenlinuxFlavourCombination
@@ -146,19 +148,22 @@ def release_manifest(
     if not 'base_image' in parsed:
         parsed['base_image'] = None
 
-    manifest = dacite.from_dict(
-        data_class=glci.model.OnlineReleaseManifest,
-        data=parsed,
-        config=dacite.Config(
-            cast=[
-                glci.model.Architecture,
-                typing.Tuple,
-                glci.model.TestResultCode,
-                glci.model.AzureTransportState,
-                glci.model.AzureHyperVGeneration,
-            ],
-        ),
-    )
+    try:
+        manifest = dacite.from_dict(
+            data_class=glci.model.OnlineReleaseManifest,
+            data=parsed,
+            config=dacite.Config(
+                cast=[
+                    glci.model.Architecture,
+                    typing.Tuple,
+                    glci.model.TestResultCode,
+                    glci.model.AzureTransportState,
+                    glci.model.AzureHyperVGeneration,
+                ],
+            ),
+        )
+    except dacite.exceptions.UnionMatchError as e:
+        raise e
 
     return manifest
 

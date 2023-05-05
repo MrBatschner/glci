@@ -150,7 +150,7 @@ class GardenlinuxFlavour:
     def calculate_modifiers(self):
         yield from (
             feature_by_name(f) for f
-            in normalised_modifiers(platform=self.platform, modifiers=self.modifiers)
+            in self.modifiers
         )
 
     def canonical_name_prefix(self):
@@ -214,8 +214,7 @@ class GardenlinuxFlavourSet:
                 yield GardenlinuxFlavour(
                     architecture=arch,
                     platform=platf,
-                    modifiers=normalised_modifiers(
-                        platform=platf, modifiers=mods),
+                    modifiers=mods,
                 )
 
 
@@ -258,7 +257,7 @@ class ReleaseIdentifier:
         return GardenlinuxFlavour(
             architecture=self.architecture,
             platform=self.platform,
-            modifiers=mods,
+            modifiers=self.modifiers,
         )
 
     def canonical_release_manifest_key_suffix(self):
@@ -444,25 +443,25 @@ class ReleaseManifest(ReleaseIdentifier):
         return dateutil.parser.isoparse(self.build_timestamp)
 
 
-def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str, ...]:
-    '''
-    determines the transitive closure of all features from the given platform and modifiers,
-    and returns the (ASCII-upper-case-sorted) result as a `tuple` of str of all modifiers,
-    except for the platform
-    '''
-    platform = feature_by_name(platform)
-    modifiers = {feature_by_name(f) for f in modifiers}
+# def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str, ...]:
+#     '''
+#     determines the transitive closure of all features from the given platform and modifiers,
+#     and returns the (ASCII-upper-case-sorted) result as a `tuple` of str of all modifiers,
+#     except for the platform
+#     '''
+#     platform = feature_by_name(platform)
+#     modifiers = {feature_by_name(f) for f in modifiers}
 
-    all_modifiers = set((m.name for m in modifiers))
-    for m in modifiers:
-        all_modifiers |= set((m.name for m in m.included_features()))
+#     all_modifiers = set((m.name for m in modifiers))
+#     for m in modifiers:
+#         all_modifiers |= set((m.name for m in m.included_features()))
 
-    for f in platform.included_features():
-        all_modifiers.add(f.name)
+#     for f in platform.included_features():
+#         all_modifiers.add(f.name)
 
-    normalised_features = tuple(sorted(all_modifiers, key=str.upper))
+#     normalised_features = tuple(sorted(all_modifiers, key=str.upper))
 
-    return normalised_features
+#     return normalised_features
 
 
 def normalised_release_identifier(release_identifier: ReleaseIdentifier):
