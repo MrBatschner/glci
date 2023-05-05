@@ -5,11 +5,11 @@ import typing
 import botocore.exceptions
 import boto3.s3.transfer as bt
 
-import ccc.aws
-import model
-
 import glci.model as gm
 import glci.util as gu
+
+import glci.aws
+import glci.credentialmanager
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +17,17 @@ logger = logging.getLogger(__name__)
 def replicate_image_blobs(
     publishing_cfg: gm.PublishingCfg,
     release_manifests: typing.Iterable[gm.ReleaseManifest],
-    cfg_factory: model.ConfigFactory,
 ):
     source_bucket = publishing_cfg.origin_buildresult_bucket
     target_buckets = publishing_cfg.replica_buildresult_buckets
 
-    s3_source_session = ccc.aws.session(source_bucket.aws_cfg_name)
-    s3_source_client = s3_source_session.client('s3')
+    credentialmgr = glci.credentialmanager.CredentialManager.get_instance()
 
+    s3_source_client = credentialmgr.get_s3_client(aws_cfg=source_bucket.aws_cfg_name)
+
+    # s3_source_session.client('s3')
     for target_bucket in target_buckets:
-        s3_target_session = ccc.aws.session(target_bucket.aws_cfg_name)
-        s3_target_client = s3_target_session.client('s3')
+        s3_target_client = credentialmgr.get_s3_client(target_bucket.aws_cfg_name)
 
         for manifest in release_manifests:
             if not manifest.platform in target_bucket.platforms:

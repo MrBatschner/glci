@@ -17,8 +17,12 @@ import publish
 import replicate
 import product.v2
 
-import ccc.aws
 import ctx
+
+import glci.aws
+import glci.credentialmanager
+
+from glci.credentialmanager import CredentialManager
 
 logger = logging.getLogger('gardenlinux-cli')
 
@@ -159,7 +163,7 @@ def _download_obj_to_file(
     s3_key: str,
     file_name: str,
 ):
-    s3_session = ccc.aws.session(cicd_cfg.build.aws_cfg_name)
+    s3_session = glci.aws.AWSSession.get_session(cicd_cfg.build.aws_cfg_name)
     s3_client = s3_session.client('s3')
     s3_client.download_file(bucket_name, s3_key, file_name)
     return 0
@@ -461,7 +465,7 @@ def replicate_blobs():
     flavour_set = _flavourset(parsed)
     flavours = tuple(flavour_set.flavours())
 
-    s3_session = ccc.aws.session(cfg.origin_buildresult_bucket.aws_cfg_name)
+    s3_session = glci.aws.AWSSession.get_session(cfg.origin_buildresult_bucket.aws_cfg_name)
     s3_client = s3_session.client('s3')
 
     version = parsed.version
@@ -492,6 +496,7 @@ def ls_manifests():
     parser = argparse.ArgumentParser()
 
     _add_flavourset_args(parser)
+    glci.credentialmanager.add_credential_parsing_args(parser)
 
     parser.add_argument(
         '--version-prefix',
@@ -527,7 +532,9 @@ def ls_manifests():
             yield prefix
 
     cfg = glci.util.publishing_cfg()
-    s3_client = ccc.aws.session(cfg.origin_buildresult_bucket.aws_cfg_name).client('s3')
+    credentialmanager = CredentialManager.get_instance(use_cc_config=parsed.cc_config_auth)
+    #s3_client = credentialmanager.get_aws_session(cfg.origin_buildresult_bucket.aws_cfg_name).client('s3')
+    s3_client = credentialmanager.get_anonymous_s3_client()
 
     versions = set()
     versions_and_commits = set()
@@ -559,6 +566,7 @@ def publish_release_set():
     )
     _add_flavourset_args(parser)
     _add_publishing_cfg_args(parser)
+    glci.credentialmanager.add_credential_parsing_args(parser)
 
     phase_sync = 'sync-images'
     phase_publish = 'publish-images'
@@ -643,10 +651,12 @@ def publish_release_set():
         commit = publish_version.commit
 
     cfg = _publishing_cfg(parsed)
-    cfg_factory = ctx.cfg_factory()
+
+    credentialmanager = glci.credentialmanager.CredentialManager(use_cc_config=parsed.cc_config_auth)
+    # cfg_factory = ctx.cfg_factory()
 
     flavour_set = _flavourset(parsed)
-    flavours = tuple(flavour_set.flavours())
+    # flavours = tuple(flavour_set.flavours())
 
     if len(commit) != 40:
         repo = git.Repo(path=paths.gardenlinux_dir)
@@ -656,6 +666,7 @@ def publish_release_set():
 
     logger.info(
         f'Publishing gardenlinux {version}@{commit} ({flavour_set.name=})\n'
+        f'Publishing gardenlinux {version}@{commit}\n'
     )
 
     if not (phase := parsed.phase):
@@ -700,7 +711,7 @@ def publish_release_set():
 
     phase_logger = start_phase('sync-images')
 
-    s3_session = ccc.aws.session(cfg.origin_buildresult_bucket.aws_cfg_name)
+    s3_session = credentialmanager.get_aws_session(aws_cfg=cfg.origin_buildresult_bucket.aws_cfg_name)
     s3_client = s3_session.client('s3')
 
     origin_buildresult_bucket = cfg.origin_buildresult_bucket
@@ -735,7 +746,6 @@ def publish_release_set():
         replicate.replicate_image_blobs(
             publishing_cfg=cfg,
             release_manifests=release_manifests,
-            cfg_factory=cfg_factory,
         )
     else:
         phase_logger.info('skipping sync-images (--skip-previous-phases)')
@@ -759,7 +769,7 @@ def publish_release_set():
                     f'no cfg for {manifest.platform=} - aborting'
                 )
             else:
-                raise ValueError(ob_absent) # programming error
+                raise ValueError(on_absent) # programming error
 
     phase_logger.info('publishing-cfg was found to be okay - starting publishing now')
 
@@ -771,6 +781,8 @@ def publish_release_set():
     for idx, manifest in enumerate(release_manifests):
         if not run_publish:
             continue
+
+        print(f"{parsed.platforms=}")
 
         if parsed.platforms and not manifest.platform in parsed.platforms:
             logger.info(f'skipping {manifest.platform} (filter was set via ARGV)')

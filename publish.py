@@ -20,7 +20,11 @@ import glci.gcp
 import glci.util
 import glci.model as gm
 
+import glci.credentialmanager
+
 logger = logging.getLogger(__name__)
+
+credentialmgr = glci.credentialmanager.CredentialManager.get_instance()
 
 
 def publish_image(
@@ -205,12 +209,12 @@ def _publish_gcp_image(
     publishing_cfg: gm.PublishingCfg,
 ) -> gm.OnlineReleaseManifest:
     gcp_publishing_cfg: gm.PublishingTargetGCP = publishing_cfg.target(release.platform)
-    cfg_factory = ci.util.ctx().cfg_factory()
-    gcp_cfg = cfg_factory.gcp(gcp_publishing_cfg.gcp_cfg_name)
-    storage_client = ccc.gcp.cloud_storage_client(gcp_cfg)
-    s3_client = ccc.aws.session(
-        publishing_cfg.origin_buildresult_bucket.aws_cfg_name,
-    ).client('s3')
+
+    # cfg_factory = ci.util.ctx().cfg_factory()
+    # gcp_cfg = cfg_factory.gcp(gcp_publishing_cfg.gcp_cfg_name)
+    # storage_client = ccc.gcp.cloud_storage_client(gcp_cfg)
+    s3_client = credentialmgr.get_s3_client(publishing_cfg.origin_buildresult_bucket.aws_cfg_name)
+    storage_client = credentialmgr.get_gcp_storage_client(gcp_publishing_cfg.gcp_cfg_name)
 
     compute_client = ccc.gcp.authenticated_build_func(gcp_cfg)('compute', 'v1')
 
