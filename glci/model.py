@@ -722,6 +722,7 @@ class PublishingTargetAliyun:
 class PublishingTargetAWSAccount:
     aws_cfg_name: str
     buildresult_bucket: str
+    copy_regions: typing.Optional[list[str]]
 
 
 @dataclasses.dataclass
