@@ -1,4 +1,9 @@
 - name: 'default'
+  manifest_s3_buckets:
+    - name: 'origin'
+      role: 'source'
+      bucket_name: 'gardenlinux-github-releases'
+      aws_cfg_name: 'gardenlinux'
   buildresult_s3_buckets:
     - name: 'origin'
       role: 'source'
@@ -40,37 +45,47 @@
       environment_cfg_name: 'gardenlinux'
       image_properties_cfg_name: 'gardenlinux'
 - name: 'gardener-integration-test'
+  manifest_s3_buckets:
+    - name: 'origin'
+      role: 'source'
+      bucket_name: 'gardenlinux-github-releases'
+      aws_cfg_name: 'gardenlinux-integration-test'
+    - name: 'tests'
+      role: 'target'
+      bucket_name: 'gardenlinux-test-import'
+      aws_cfg_name: 'gardenlinux-integration-test'
   buildresult_s3_buckets:
     - name: 'origin'
       role: 'source'
       bucket_name: 'gardenlinux-github-releases'
       aws_cfg_name: 'gardenlinux-integration-test'
   ocm:
-    component_repository_cfg_name: 'gardener-dev'
+    component_repository_cfg_name: 'gardenlinux-test'
   targets:
     - platform: 'ali'
       oss_bucket_name: 'gardenlinux-community'
       aliyun_region: 'eu-central-1'
       aliyun_cfg_name: 'gardenlinux'
+      copy_regions: ['eu-central-1']
     - platform: 'aws'
       aws_cfgs:
-        - aws_cfg_name: 'gardenlinux'
+        - aws_cfg_name: 'gardenlinux-integration-test'
           buildresult_bucket: 'origin'
           copy_regions: ['europe-west-1']
-    - platform: 'gcp'
-      gcp_cfg_name: 'gardenlinux'
-      gcp_bucket_name: 'gardenlinux-images'
-    - platform: 'azure'
-      gallery_cfg_name: 'gardenlinux-community-gallery'
-      storage_account_cfg_name: 'gardenlinux-community-gallery'
-      service_principal_cfg_name: 'gardenlinux'
-      marketplace_cfg:
-        offer_id: 'gardenlinux'
-        publisher_id: 'sap'
-        plan_id: 'greatest'
-        notification_emails: ['thomas.buchner@sap.com','dirk.marwinski@sap.com','andre.russ@sap.com']
-      publish_to_marketplace: true
-      publish_to_community_galleries: true
-    - platform: 'openstack'
-      environment_cfg_name: 'gardenlinux'
-      image_properties_cfg_name: 'gardenlinux'
+    # - platform: 'gcp'
+    #   gcp_cfg_name: 'gardenlinux'
+    #   gcp_bucket_name: 'gardenlinux-images'
+    # - platform: 'azure'
+    #   gallery_cfg_name: 'gardenlinux-community-gallery'
+    #   storage_account_cfg_name: 'gardenlinux-community-gallery'
+    #   service_principal_cfg_name: 'gardenlinux'
+    #   marketplace_cfg:
+    #     offer_id: 'gardenlinux'
+    #     publisher_id: 'sap'
+    #     plan_id: 'greatest'
+    #     notification_emails: ['thomas.buchner@sap.com','dirk.marwinski@sap.com','andre.russ@sap.com']
+    #   publish_to_marketplace: true
+    #   publish_to_community_galleries: true
+    # - platform: 'openstack'
+    #   environment_cfg_name: 'gardenlinux'
+    #   image_properties_cfg_name: 'gardenlinux'
