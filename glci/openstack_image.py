@@ -6,6 +6,7 @@ from datetime import datetime
 from time import sleep
 
 from openstack import connect
+import openstack.exceptions
 
 import glci
 
