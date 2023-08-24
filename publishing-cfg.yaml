@@ -65,7 +65,7 @@
     - platform: 'ali'
       oss_bucket_name: 'gardenlinux-community'
       aliyun_region: 'eu-central-1'
-      aliyun_cfg_name: 'gardenlinux'
+      aliyun_cfg_name: 'gardenlinux-integration-test'
       copy_regions: ['eu-central-1']
     - platform: 'aws'
       aws_cfgs:
