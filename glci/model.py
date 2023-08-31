@@ -827,7 +827,7 @@ class PublishingCfg:
             if bucket.role is ManifestBucketRole.SOURCE:
                 return bucket
         raise RuntimeError('did not find manifest-bucket w/ role `source`')
-    
+
     @property
     def target_manifest_buckets(self) -> typing.Tuple[BuildresultS3Bucket, None, None]:
         for bucket in self.manifest_s3_buckets:

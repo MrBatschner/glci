@@ -647,7 +647,6 @@ def publish_release_set():
     flavour_set = _flavourset(parsed)
     flavours = tuple(flavour_set.flavours())
 
-
     if len(commit) != 40:
         repo = git.Repo(path=paths.gardenlinux_dir)
         commit = repo.git.rev_parse(commit)
