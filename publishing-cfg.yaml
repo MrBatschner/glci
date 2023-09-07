@@ -62,11 +62,11 @@
   ocm:
     component_repository_cfg_name: 'gardenlinux-test'
   targets:
-    - platform: 'ali'
-      oss_bucket_name: 'gardenlinux-community'
-      aliyun_region: 'eu-central-1'
-      aliyun_cfg_name: 'gardenlinux-integration-test'
-      copy_regions: ['eu-central-1']
+    # - platform: 'ali'
+    #   oss_bucket_name: 'gardenlinux-community'
+    #   aliyun_region: 'eu-central-1'
+    #   aliyun_cfg_name: 'gardenlinux-integration-test'
+    #   copy_regions: ['eu-central-1']
     - platform: 'aws'
       aws_cfgs:
         - aws_cfg_name: 'gardenlinux-integration-test'
